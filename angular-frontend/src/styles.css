@@ -1,0 +1,75 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Import Bootstrap */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Custom Styles from original project */
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Toast Styles */
+.toast {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border: none;
+  margin-bottom: 1rem;
+  max-width: 350px;
+}
+
+.toast-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.toast-body {
+  padding: 1rem;
+}
+
+/* Priority Badges */
+.badge {
+  font-weight: 500;
+  padding: 0.4em 0.6em;
+  text-transform: capitalize;
+}
+
+/* Table Styles */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-striped-bg: rgba(0, 0, 0, 0.01);
+  margin-bottom: 0;
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Make table container scrollable */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom gradient for primary buttons */
+.bg-gradient-primary {
+  background: linear-gradient(90deg, #4f46e5, #7c3aed) !important;
+}
+
+/* Dark theme support */
+[data-bs-theme="dark"] .bg-light {
+  background-color: #212529 !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+  color: #fff !important;
+}
+
+[data-bs-theme="dark"] .border {
+  border-color: #495057 !important;
+}
