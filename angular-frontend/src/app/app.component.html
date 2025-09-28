@@ -372,7 +372,7 @@
           </div>
           
           <!-- Connection Status -->
-          <div class="alert mt-4" [ngClass]="{
+          <!-- <div class="alert mt-4" [ngClass]="{
             'alert-success': connectionStatus.backend && connectionStatus.jiraApi,
             'alert-warning': connectionStatus.backend || connectionStatus.jiraApi,
             'alert-danger': !connectionStatus.backend && !connectionStatus.jiraApi
@@ -413,9 +413,9 @@
               </div>
             </div>
             <small class="text-muted">Last checked: {{ connectionStatus.lastChecked | date:'short' }}</small>
-          </div>
+          </div> -->
 
-          <div class="alert alert-info mt-4">
+          <!-- <div class="alert alert-info mt-4">
             <h5><i class="bi bi-info-circle"></i> Backend API Integration</h5>
             <p class="mb-0">Your Angular frontend is now ready to connect to your backend APIs:</p>
             <ul class="mb-0 mt-2">
@@ -424,7 +424,7 @@
               <li><strong>Configuration:</strong> Easily configurable via ApiConfigService</li>
               <li><strong>Error Handling:</strong> Built-in error handling and retry logic</li>
             </ul>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
