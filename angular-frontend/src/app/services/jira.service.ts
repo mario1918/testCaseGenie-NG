@@ -66,4 +66,91 @@ export class JiraService {
   getBoards(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiConfig.getFullUrl('jira', 'jiraBoards')}?project_key=${this.apiConfig.jiraProjectKey}`);
   }
+
+  // Import test cases to Jira
+  importTestCasesToJira(testCases: any[], options: {
+    projectKey?: string;
+    versionId?: string;
+    cycleId?: string;
+    folderId?: string;
+  } = {}): Observable<any> {
+    // Transform test cases to match the API schema
+    const transformedTestCases = testCases.map(testCase => ({
+      summary: testCase.title || testCase.summary || '',
+      description: testCase.title || testCase.summary || '', // Use title as description too
+      components: ["Supply Chain"], // Default component
+      related_issues: [], // Empty array as default - could be populated from issue context
+      steps: this.parseStepsToArray(testCase.steps || ''),
+      version_id: parseInt(options.versionId || '-1'),
+      cycle_id: parseInt(options.cycleId || '-1'),
+      execution_status: {
+        id: this.getExecutionStatusId(testCase.executionStatus || 'not-executed')
+      }
+    }));
+
+    const payload = {
+      TestCases: transformedTestCases,
+      version_id: parseInt(options.versionId || '-1'),
+      cycle_id: parseInt(options.cycleId || '-1')
+    };
+
+    return this.http.post<any>(`http://localhost:8000/api/test-cases/bulk/full-create`, payload);
+  }
+
+  // Helper method to parse steps string into array format
+  private parseStepsToArray(stepsString: string): any[] {
+    if (!stepsString) return [];
+    
+    // Split by numbered steps (1., 2., 3., etc.) or line breaks
+    const stepLines = stepsString
+      .split(/\d+\.\s*/)
+      .filter(step => step.trim())
+      .map(step => step.trim());
+    
+    if (stepLines.length === 0) {
+      // If no numbered steps found, treat as single step
+      return [{
+        step: stepsString.trim(),
+        stepDescription: stepsString.trim(),
+        data: "",
+        result: ""
+      }];
+    }
+    
+    // Convert each step to the expected format
+    return stepLines.map(stepText => ({
+      step: stepText,
+      stepDescription: stepText,
+      data: "",
+      result: stepText.toLowerCase().includes('result') || stepText.toLowerCase().includes('should') ? stepText : ""
+    }));
+  }
+
+  // Helper method to get execution status ID
+  private getExecutionStatusId(status: string): number {
+    const statusMap: { [key: string]: number } = {
+      'not-executed': 1,
+      'passed': 2,
+      'failed': 3,
+      'blocked': 4
+    };
+    return statusMap[status] || 1;
+  }
+
+  // Get project versions
+  getVersions(): Observable<any[]> {
+    const params = new HttpParams()
+      .set('all', 'true')
+      .set('max_per_page', '50');
+    return this.http.get<any[]>(`http://localhost:8000/api/jira/versions`, { params });
+  }
+
+  // Get Zephyr test cycles
+  getTestCycles(versionId: number = -1): Observable<any> {
+    const params = new HttpParams()
+      .set('version_id', versionId.toString())
+      .set('offset', '0')
+      .set('limit', '50');
+    return this.http.get<any>(`http://localhost:8000/api/zephyr/cycles`, { params });
+  }
 }

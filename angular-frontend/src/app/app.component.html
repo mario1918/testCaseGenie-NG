@@ -273,6 +273,13 @@
                   [disabled]="testCases.length === 0">
                   <i class="bi bi-file-earmark-excel"></i> Export Excel
                 </button>
+                <button 
+                  (click)="showImportToJiraModal()" 
+                  class="btn btn-info btn-sm" 
+                  [disabled]="!canImportToJira"
+                  title="Import test cases to Jira">
+                  <i class="bi bi-upload"></i> Import to Jira
+                </button>
               </div>
             </div>
 
@@ -728,6 +735,97 @@
           class="btn btn-primary" 
           (click)="generateTestCasesFromView()">
           <i class="bi bi-magic"></i> Generate Test Cases
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import to Jira Modal -->
+<div class="modal fade" id="importToJiraModal" tabindex="-1" aria-labelledby="importToJiraModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="importToJiraModalLabel">
+          <i class="bi bi-upload"></i> Import Test Cases to Jira
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i>
+          <strong>Import Summary:</strong> {{ testCases.length }} test cases will be imported to Jira project <strong>{{ apiConfig.jiraProjectKey }}</strong>
+        </div>
+
+        <!-- Debug Info (remove this after fixing) -->
+        <div class="alert alert-secondary small">
+          <strong>Debug Info:</strong><br>
+          Selected Version ID: "{{ selectedVersionId }}"<br>
+          Selected Cycle ID: "{{ selectedCycleId }}"<br>
+          Test Cycle Disabled: {{ isTestCycleDisabled }}<br>
+          Versions Count: {{ jiraVersions.length }}<br>
+          Test Cycles Count: {{ testCycles.length }}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="versionSelect" class="form-label">Target Version *</label>
+              <select class="form-select" id="versionSelect" [(ngModel)]="selectedVersionId" (change)="onVersionChange()">
+                <option value="">Select a version</option>
+                <option *ngFor="let version of jiraVersions" [value]="version.id">
+                  {{ version.name }}
+                </option>
+              </select>
+              <div class="form-text">Choose a version to associate the test cases with</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="testCycleSelect" class="form-label">Test Cycle *</label>
+              <select class="form-select" id="testCycleSelect" [(ngModel)]="selectedCycleId" [disabled]="isTestCycleDisabled">
+                <option value="">Select a test cycle</option>
+                <option *ngFor="let cycle of testCycles" [value]="cycle.id">
+                  {{ cycle.name }}
+                </option>
+              </select>
+              <div class="form-text">Choose a test cycle for the test cases</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-list-check"></i> Test Cases to Import</h6>
+          </div>
+          <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+            <div class="row g-2" *ngFor="let testCase of testCases; let i = index">
+              <div class="col-1">
+                <span class="badge bg-primary">{{ i + 1 }}</span>
+              </div>
+              <div class="col-11">
+                <div class="fw-medium">{{ testCase.title }}</div>
+                <small class="text-muted">Priority: {{ testCase.priority }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+          <i class="bi bi-exclamation-triangle"></i>
+          <strong>Note:</strong> This will create new test case issues in Jira. Make sure you have the necessary permissions.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button 
+          type="button" 
+          class="btn btn-info" 
+          (click)="importToJira()"
+          [disabled]="!canConfirmImport">
+          <span *ngIf="isImportingToJira" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <i class="bi bi-upload" *ngIf="!isImportingToJira"></i>
+          {{ isImportingToJira ? 'Importing...' : 'Import to Jira' }}
         </button>
       </div>
     </div>

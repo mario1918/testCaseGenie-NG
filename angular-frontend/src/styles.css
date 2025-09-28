@@ -73,3 +73,42 @@
 [data-bs-theme="dark"] .border {
   border-color: #495057 !important;
 }
+
+/* Dark theme dropdown fixes */
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] select.form-select,
+html[data-bs-theme="dark"] .form-select,
+html[data-bs-theme="dark"] select.form-select {
+  background-color: #212529 !important;
+  border-color: #495057 !important;
+  color: #ffffff !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+}
+
+[data-bs-theme="dark"] .form-select:focus,
+[data-bs-theme="dark"] select.form-select:focus,
+html[data-bs-theme="dark"] .form-select:focus,
+html[data-bs-theme="dark"] select.form-select:focus {
+  background-color: #212529 !important;
+  border-color: #667eea !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .form-select option,
+[data-bs-theme="dark"] select.form-select option,
+html[data-bs-theme="dark"] .form-select option,
+html[data-bs-theme="dark"] select.form-select option {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .form-select:disabled,
+[data-bs-theme="dark"] select.form-select:disabled,
+html[data-bs-theme="dark"] .form-select:disabled,
+html[data-bs-theme="dark"] select.form-select:disabled {
+  background-color: #343a40 !important;
+  border-color: #495057 !important;
+  color: #6c757d !important;
+  opacity: 0.65 !important;
+}

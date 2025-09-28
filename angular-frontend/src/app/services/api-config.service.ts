@@ -26,6 +26,8 @@ export class ApiConfigService {
       jiraComponents: '/components',
       jiraSprints: '/sprints/ordered',
       jiraBoards: '/boards',
+      jiraVersions: '/versions',
+      jiraImportTestCases: '/test-cases/bulk/full-create',
       
       // Health check
       health: '/health'

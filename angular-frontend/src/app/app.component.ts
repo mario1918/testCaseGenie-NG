@@ -7,6 +7,7 @@ import { JiraService } from './services/jira.service';
 import { TestCaseService } from './services/test-case.service';
 import { BadgeUtilsService } from './services/badge-utils.service';
 import { ConnectionStatusService, ConnectionStatus } from './services/connection-status.service';
+import { ApiConfigService } from './services/api-config.service';
 import { JiraIssue, JiraIssuesResponse, JiraComponent, JiraSprint } from './models/jira-issue.model';
 import { TestCase } from './models/test-case.model';
 
@@ -68,12 +69,21 @@ export class AppComponent implements OnInit {
     lastChecked: new Date()
   };
 
+  // Import to Jira properties
+  isImportingToJira = false;
+  jiraVersions: any[] = [];
+  testCycles: any[] = [];
+  selectedVersionId: string = '';
+  selectedCycleId: string = '';
+  importToJiraModal: any;
+
   constructor(
     public themeService: ThemeService,
     private jiraService: JiraService,
     private testCaseService: TestCaseService,
     public badgeUtils: BadgeUtilsService,
-    private connectionStatusService: ConnectionStatusService
+    private connectionStatusService: ConnectionStatusService,
+    public apiConfig: ApiConfigService
   ) {}
 
   ngOnInit(): void {
@@ -108,6 +118,7 @@ export class AppComponent implements OnInit {
       const addTestCaseModalEl = document.getElementById('addTestCaseModal');
       const editTestCaseModalEl = document.getElementById('editTestCaseModal');
       const viewIssueModalEl = document.getElementById('viewIssueModal');
+      const importToJiraModalEl = document.getElementById('importToJiraModal');
       
       if (issueDetailsModalEl) {
         this.issueDetailsModal = new bootstrap.Modal(issueDetailsModalEl);
@@ -120,6 +131,9 @@ export class AppComponent implements OnInit {
       }
       if (viewIssueModalEl) {
         this.viewIssueModal = new bootstrap.Modal(viewIssueModalEl);
+      }
+      if (importToJiraModalEl) {
+        this.importToJiraModal = new bootstrap.Modal(importToJiraModalEl);
       }
     }, 100);
   }
@@ -404,4 +418,155 @@ export class AppComponent implements OnInit {
 
   // Math reference for template
   Math = Math;
+
+  // Import to Jira functionality
+  showImportToJiraModal(): void {
+    if (this.testCases.length === 0) {
+      this.showErrorToast('No test cases to import. Please generate test cases first.');
+      return;
+    }
+
+    // Load Jira versions and test cycles
+    this.loadJiraVersions();
+    this.loadTestCycles(-1); // Load with default version_id=-1
+    
+    if (this.importToJiraModal) {
+      this.importToJiraModal.show();
+    }
+  }
+
+  loadJiraVersions(): void {
+    console.log('Loading Jira versions...');
+    this.jiraService.getVersions().subscribe({
+      next: (versions) => {
+        console.log('Loaded versions:', versions);
+        
+        // Ensure we have an array
+        if (Array.isArray(versions)) {
+          // Sort versions by release date in descending order (newest first)
+          this.jiraVersions = versions.sort((a, b) => {
+            const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
+            const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
+            return dateB - dateA;
+          });
+        } else {
+          console.warn('Unexpected versions response format:', versions);
+          this.jiraVersions = [];
+        }
+        
+        console.log('Sorted versions:', this.jiraVersions);
+      },
+      error: (error) => {
+        console.error('Error loading Jira versions:', error);
+        this.jiraVersions = []; // Ensure it's always an array
+        this.showErrorToast('Failed to load Jira versions');
+      }
+    });
+  }
+
+  loadTestCycles(versionId: number = -1): void {
+    console.log('Loading test cycles for version ID:', versionId);
+    this.jiraService.getTestCycles(versionId).subscribe({
+      next: (response) => {
+        console.log('Test cycles response:', response);
+        
+        // Handle the actual API response structure
+        if (Array.isArray(response)) {
+          this.testCycles = response;
+        } else if (response && Array.isArray(response.items)) {
+          // This is the correct structure based on your API response
+          this.testCycles = response.items;
+        } else if (response && Array.isArray(response.cycles)) {
+          this.testCycles = response.cycles;
+        } else if (response && Array.isArray(response.data)) {
+          this.testCycles = response.data;
+        } else {
+          console.warn('Unexpected test cycles response format:', response);
+          this.testCycles = [];
+        }
+        
+        console.log('Processed test cycles:', this.testCycles);
+        console.log('Test cycles count:', this.testCycles.length);
+      },
+      error: (error) => {
+        console.error('Error loading test cycles:', error);
+        this.testCycles = []; // Ensure it's always an array
+        this.showErrorToast('Failed to load test cycles');
+      }
+    });
+  }
+
+  onVersionChange(): void {
+    console.log('Version changed to:', this.selectedVersionId);
+    console.log('Is test cycle disabled?', this.isTestCycleDisabled);
+    const versionId = this.selectedVersionId ? parseInt(this.selectedVersionId) : -1;
+    this.selectedCycleId = ''; // Reset cycle selection
+    this.loadTestCycles(versionId);
+  }
+
+  get isTestCycleDisabled(): boolean {
+    const disabled = !this.selectedVersionId || this.selectedVersionId === '';
+    console.log('Test cycle disabled check - selectedVersionId:', `"${this.selectedVersionId}"`, 'type:', typeof this.selectedVersionId, 'disabled:', disabled);
+    return disabled;
+  }
+
+  importToJira(): void {
+    if (this.testCases.length === 0) {
+      this.showErrorToast('No test cases to import');
+      return;
+    }
+
+    // Validate selections
+    if (!this.selectedVersionId) {
+      this.showErrorToast('Please select a version');
+      return;
+    }
+
+    if (!this.selectedCycleId) {
+      this.showErrorToast('Please select a test cycle');
+      return;
+    }
+
+    this.isImportingToJira = true;
+
+    const importOptions = {
+      projectKey: this.apiConfig.jiraProjectKey,
+      versionId: this.selectedVersionId,
+      cycleId: this.selectedCycleId
+    };
+
+    this.jiraService.importTestCasesToJira(this.testCases, importOptions).subscribe({
+      next: (response) => {
+        this.isImportingToJira = false;
+        
+        if (response.success) {
+          const message = `Successfully imported ${response.created} test cases to Jira!`;
+          if (response.failed > 0) {
+            this.showErrorToast(`${message} ${response.failed} failed to import.`);
+          } else {
+            this.showSuccessToast(message);
+          }
+        } else {
+          this.showErrorToast('Failed to import test cases to Jira');
+        }
+
+        if (this.importToJiraModal) {
+          this.importToJiraModal.hide();
+        }
+      },
+      error: (error) => {
+        this.isImportingToJira = false;
+        console.error('Error importing to Jira:', error);
+        this.showErrorToast('Failed to import test cases to Jira. Please check your connection and try again.');
+      }
+    });
+  }
+
+  get canImportToJira(): boolean {
+    return this.testCases.length > 0 && this.connectionStatus.jiraApi;
+  }
+
+  get canConfirmImport(): boolean {
+    return this.selectedVersionId !== '' && this.selectedCycleId !== '' && !this.isImportingToJira;
+  }
 }
