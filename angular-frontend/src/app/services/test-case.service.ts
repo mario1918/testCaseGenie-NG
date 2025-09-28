@@ -20,7 +20,7 @@ export class TestCaseService {
     private apiConfig: ApiConfigService
   ) {}
 
-  generateTestCases(issue: JiraIssue, isAdditional: boolean = false, existingTestCases: TestCase[] = []): Observable<any> {
+  generateTestCases(issue: JiraIssue, isAdditional: boolean = false, existingTestCases: TestCase[] = [], specialComments?: string): Observable<any> {
     const payload: GenerateTestCaseRequest = {
       prompt: issue.description || '',
       issue_key: issue.key,
@@ -29,6 +29,7 @@ export class TestCaseService {
       status: issue.status || '',
       existing_test_cases: existingTestCases,
       conversation_history: this.conversationHistorySubject.value,
+      special_comments: specialComments
     };
 
     return this.http.post<any>(this.apiConfig.getFullUrl('backend', 'generateTestCases'), payload);

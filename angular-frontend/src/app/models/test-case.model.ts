@@ -16,6 +16,7 @@ export interface GenerateTestCaseRequest {
   existing_test_cases?: TestCase[];
   conversation_history?: ConversationMessage[];
   is_additional_generation?: boolean;
+  special_comments?: string;
 }
 
 export interface ConversationMessage {

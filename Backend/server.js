@@ -15,11 +15,18 @@ app.post("/generate", async (req, res) => {
       is_additional_generation = false, 
       summary = '', 
       issue_key = '',
-      conversation_history = []
+      conversation_history = [],
+      special_comments = ''
     } = req.body;
     
+    // Enhance the prompt with special comments if provided
+    let enhancedPrompt = prompt;
+    if (special_comments && special_comments.trim()) {
+      enhancedPrompt = `${prompt}\n\nAdditional Instructions:\n${special_comments}`;
+    }
+    
     const output = await generateTestCases({
-      prompt,
+      prompt: enhancedPrompt,
       existing_test_cases,
       is_additional_generation,
       summary,
@@ -92,7 +99,13 @@ app.post("/generate", async (req, res) => {
         }
       ]
     };
-
+    console.log('🤖 ENHANCED PROMPT SENT TO AI:');
+    console.log('='.repeat(80));
+    console.log(enhancedPrompt);
+    if (special_comments && special_comments.trim()) {
+      console.log('💬 Special Comments Added:', special_comments);
+    }
+    console.log('='.repeat(80));
     res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });

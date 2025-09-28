@@ -46,6 +46,7 @@ export class AppComponent implements OnInit {
   
   // Current issue for test case generation
   currentIssue: JiraIssue | null = null;
+  specialComments: string = '';
   
   // Modal references
   issueDetailsModal: any;
@@ -217,9 +218,14 @@ export class AppComponent implements OnInit {
 
   showIssueDetails(issue: JiraIssue): void {
     this.currentIssue = issue;
+    // Keep special comments from previous session, don't clear automatically
     if (this.issueDetailsModal) {
       this.issueDetailsModal.show();
     }
+  }
+
+  clearSpecialComments(): void {
+    this.specialComments = '';
   }
 
   generateTestCases(): void {
@@ -227,37 +233,38 @@ export class AppComponent implements OnInit {
     
     this.isGeneratingTestCases = true;
     
-    this.testCaseService.generateTestCases(this.currentIssue).subscribe({
+    this.testCaseService.generateTestCases(this.currentIssue, false, [], this.specialComments).subscribe({
       next: (response) => {
         const testCases = Array.isArray(response) ? response : (response.testCases || response.data || []);
         this.testCaseService.updateTestCases(testCases);
         
+        // Update conversation history if available
         if (response.conversation_history) {
           this.testCaseService.updateConversationHistory(response.conversation_history);
         }
         
         this.isGeneratingTestCases = false;
+        this.showSuccessToast(`Generated ${testCases.length} test cases successfully!`);
+        
+        // Close the modal
         if (this.issueDetailsModal) {
           this.issueDetailsModal.hide();
         }
-        
-        this.showSuccessToast(`Successfully generated ${testCases.length} test cases!`);
       },
       error: (error) => {
-        console.error('Error generating test cases:', error);
         this.isGeneratingTestCases = false;
+        console.error('Error generating test cases:', error);
         this.showErrorToast('Failed to generate test cases. Please try again.');
       }
     });
   }
-
   generateMoreTestCases(): void {
     if (!this.currentIssue) return;
     
     this.isGeneratingTestCases = true;
     const existingTestCases = this.testCaseService.getCurrentTestCases();
     
-    this.testCaseService.generateTestCases(this.currentIssue, true, existingTestCases).subscribe({
+    this.testCaseService.generateTestCases(this.currentIssue, true, existingTestCases, this.specialComments).subscribe({
       next: (response) => {
         const testCases = Array.isArray(response) ? response : (response.testCases || response.data || []);
         this.testCaseService.updateTestCases(testCases, true);
