@@ -73,16 +73,22 @@ export class JiraService {
     versionId?: string;
     cycleId?: string;
     folderId?: string;
+    issueInfo?: {
+      key?: string;
+      sprintId?: number;
+      component?: string;
+    };
   } = {}): Observable<any> {
     // Transform test cases to match the API schema
     const transformedTestCases = testCases.map(testCase => ({
       summary: testCase.title || testCase.summary || '',
       description: testCase.title || testCase.summary || '', // Use title as description too
-      components: ["Supply Chain"], // Default component
-      related_issues: [], // Empty array as default - could be populated from issue context
+      components: options.issueInfo?.component ? [options.issueInfo.component] : ["Supply Chain"], // Map component from issue
+      related_issues: options.issueInfo?.key ? [options.issueInfo.key] : [], // Map issue key
       steps: this.parseStepsToArray(testCase.steps || ''),
       version_id: parseInt(options.versionId || '-1'),
       cycle_id: parseInt(options.cycleId || '-1'),
+      sprint_id: options.issueInfo?.sprintId || 0, // Map sprint ID from issue
       execution_status: {
         id: this.getExecutionStatusId(testCase.executionStatus || 'not-executed')
       }

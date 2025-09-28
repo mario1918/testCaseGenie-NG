@@ -8,6 +8,7 @@ export interface JiraIssue {
   assignee?: string;
   reporter?: string;
   sprint?: string;
+  component?: string;
   created?: string;
   updated?: string;
 }

@@ -532,7 +532,12 @@ export class AppComponent implements OnInit {
     const importOptions = {
       projectKey: this.apiConfig.jiraProjectKey,
       versionId: this.selectedVersionId,
-      cycleId: this.selectedCycleId
+      cycleId: this.selectedCycleId,
+      issueInfo: this.currentIssue ? {
+        key: this.currentIssue.key,
+        sprintId: this.currentIssue.sprint ? parseInt(this.currentIssue.sprint) : 0,
+        component: this.currentIssue.component
+      } : undefined
     };
 
     this.jiraService.importTestCasesToJira(this.testCases, importOptions).subscribe({
