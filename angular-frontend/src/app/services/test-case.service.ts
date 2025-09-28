@@ -29,24 +29,33 @@ export class TestCaseService {
       status: issue.status || '',
       existing_test_cases: existingTestCases,
       conversation_history: this.conversationHistorySubject.value,
-      is_additional_generation: isAdditional
     };
 
     return this.http.post<any>(this.apiConfig.getFullUrl('backend', 'generateTestCases'), payload);
   }
 
-  updateTestCases(testCases: TestCase[], isAdditional: boolean = false): void {
-    if (isAdditional) {
+  updateTestCases(testCases: TestCase[], append: boolean = false): void {
+    // Ensure all test cases have default execution status
+    const testCasesWithStatus = testCases.map(testCase => ({
+      ...testCase,
+      executionStatus: testCase.executionStatus || 'not-executed' as 'not-executed'
+    }));
+
+    if (append) {
       const currentTestCases = this.testCasesSubject.value;
-      this.testCasesSubject.next([...currentTestCases, ...testCases]);
+      this.testCasesSubject.next([...currentTestCases, ...testCasesWithStatus]);
     } else {
-      this.testCasesSubject.next(testCases);
+      this.testCasesSubject.next(testCasesWithStatus);
     }
   }
 
   addTestCase(testCase: TestCase): void {
     const currentTestCases = this.testCasesSubject.value;
-    this.testCasesSubject.next([...currentTestCases, testCase]);
+    const newTestCase = {
+      ...testCase,
+      executionStatus: testCase.executionStatus || 'not-executed' as 'not-executed'
+    };
+    this.testCasesSubject.next([...currentTestCases, newTestCase]);
   }
 
   updateTestCase(updatedTestCase: TestCase): void {
