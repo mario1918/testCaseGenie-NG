@@ -59,8 +59,46 @@ app.post("/generate", async (req, res) => {
           .map((step, index) => `${index + 1}. ${step}`)
           .join('\n');
       } else {
-        // Use steps as is if it's already a string
+        // Handle string steps - check if they're already numbered and split them
         steps = tc.steps || '';
+        if (steps && typeof steps === 'string') {
+          console.log('🔍 Original steps string:', steps);
+          
+          // More aggressive step formatting
+          let originalSteps = steps;
+          
+          // Check if we have numbered steps (1., 2., 3., etc.)
+          const numberedStepMatches = steps.match(/\d+\.\s+/g);
+          if (numberedStepMatches && numberedStepMatches.length > 1) {
+            console.log('✅ Found multiple numbered steps, splitting...');
+            
+            // Method 1: Split using regex and clean up
+            let splitSteps = steps.split(/(?=\d+\.\s+)/)
+              .filter(step => step.trim())
+              .map(step => step.trim());
+            
+            if (splitSteps.length > 1) {
+              steps = splitSteps.join('\n');
+              console.log('🔄 Method 1 - Split result:', steps);
+            } else {
+              // Method 2: More aggressive replacement
+              steps = steps
+                .replace(/(\d+\.\s+)/g, '\n$1') // Add newline before each number
+                .replace(/^\n/, '') // Remove leading newline
+                .trim();
+              console.log('🔄 Method 2 - Replace result:', steps);
+            }
+          } else {
+            console.log('❌ No multiple numbered steps found');
+          }
+          
+          // Log final result
+          if (steps !== originalSteps) {
+            console.log('🔄 Final formatted steps:', steps);
+          } else {
+            console.log('❌ No formatting applied, keeping original');
+          }
+        }
       }
 
       // If it's already in the correct format, return as is
@@ -106,6 +144,15 @@ app.post("/generate", async (req, res) => {
       console.log('💬 Special Comments Added:', special_comments);
     }
     console.log('='.repeat(80));
+    
+    // Log steps transformation for debugging
+    cleanedCases.forEach((tc, index) => {
+      if (tc.steps && tc.steps.includes('\n')) {
+        console.log(`📝 Test Case ${index + 1} Steps (formatted):`);
+        console.log(tc.steps);
+        console.log('─'.repeat(40));
+      }
+    });
     res.json(response);
   } catch (err) {
     res.status(500).json({ error: err.message });

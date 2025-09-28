@@ -135,9 +135,9 @@ export class JiraService {
   // Helper method to get execution status ID
   private getExecutionStatusId(status: string): number {
     const statusMap: { [key: string]: number } = {
-      'not-executed': 1,
-      'passed': 2,
-      'failed': 3,
+      'not-executed': -1,
+      'passed': 1,
+      'failed': 2,
       'blocked': 4
     };
     return statusMap[status] || 1;

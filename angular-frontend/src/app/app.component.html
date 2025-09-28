@@ -322,10 +322,10 @@
                       <div class="fw-medium">{{ testCase.title }}</div>
                     </td>
                     <td>
-                      <div class="text-wrap" style="max-width: 300px;">{{ testCase.steps }}</div>
+                      <div class="text-wrap" style="max-width: 300px; word-wrap: break-word; line-height: 1.4;" [innerHTML]="formatStepsAsHtml(testCase.steps)"></div>
                     </td>
                     <td>
-                      <div class="text-wrap" style="max-width: 250px;">{{ testCase.expectedResult }}</div>
+                      <div class="text-wrap" style="max-width: 250px; white-space: pre-line;">{{ testCase.expectedResult }}</div>
                     </td>
                     <td>
                       <span 

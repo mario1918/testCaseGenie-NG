@@ -581,4 +581,41 @@ export class AppComponent implements OnInit {
   get canConfirmImport(): boolean {
     return this.selectedVersionId !== '' && this.selectedCycleId !== '' && !this.isImportingToJira;
   }
+
+  // Helper method to format steps for display
+  formatSteps(steps: string): string {
+    if (!steps) return '';
+    
+    console.log('🔍 Frontend formatting steps:', steps);
+    
+    // If steps already have line breaks, return as is
+    if (steps.includes('\n')) {
+      console.log('✅ Steps already have line breaks');
+      return steps;
+    }
+    
+    // Check for numbered steps pattern - be more aggressive
+    const numberedMatches = steps.match(/\d+\./g);
+    if (numberedMatches && numberedMatches.length > 1) {
+      console.log('✅ Frontend found multiple numbered steps, formatting...');
+      
+      // Split the string at each number followed by period
+      let formatted = steps
+        .replace(/(\s*)(\d+\.\s*)/g, '\n$2') // Add newline before each "number."
+        .replace(/^\n/, '') // Remove leading newline
+        .trim();
+      
+      console.log('🔄 Frontend formatted result:', formatted);
+      return formatted;
+    }
+    
+    console.log('❌ Frontend: No formatting needed');
+    return steps;
+  }
+
+  // Helper method to format steps as HTML
+  formatStepsAsHtml(steps: string): string {
+    const formatted = this.formatSteps(steps);
+    return formatted.replace(/\n/g, '<br>');
+  }
 }
