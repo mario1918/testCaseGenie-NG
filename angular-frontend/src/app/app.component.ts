@@ -298,8 +298,11 @@ export class AppComponent implements OnInit {
 
   addTestCase(): void {
     if (this.newTestCase.title && this.newTestCase.steps && this.newTestCase.expectedResult) {
+      // Generate incremental ID based on existing test cases
+      const nextId = this.getNextTestCaseId();
+      
       const testCase: TestCase = {
-        id: `tc-${Date.now()}`,
+        id: nextId.toString(),
         title: this.newTestCase.title,
         steps: this.newTestCase.steps,
         expectedResult: this.newTestCase.expectedResult,
@@ -315,6 +318,24 @@ export class AppComponent implements OnInit {
       
       this.showSuccessToast('Test case added successfully!');
     }
+  }
+
+  // Helper method to generate the next incremental test case ID
+  private getNextTestCaseId(): number {
+    if (this.testCases.length === 0) {
+      return 1;
+    }
+    
+    // Find the highest numeric ID from existing test cases
+    let maxId = 0;
+    this.testCases.forEach(testCase => {
+      const numericId = parseInt(testCase.id);
+      if (!isNaN(numericId) && numericId > maxId) {
+        maxId = numericId;
+      }
+    });
+    
+    return maxId + 1;
   }
 
   showEditTestCaseModal(testCase: TestCase): void {

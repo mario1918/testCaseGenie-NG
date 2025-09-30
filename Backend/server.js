@@ -49,8 +49,21 @@ app.post("/generate", async (req, res) => {
       });
     }
 
+    // Generate incremental IDs for test cases
+    // Find the highest existing ID from existing test cases
+    let maxExistingId = 0;
+    if (existing_test_cases && Array.isArray(existing_test_cases)) {
+      existing_test_cases.forEach(tc => {
+        const numericId = parseInt(tc.id);
+        if (!isNaN(numericId) && numericId > maxExistingId) {
+          maxExistingId = numericId;
+        }
+      });
+    }
+    let idCounter = maxExistingId + 1;
+    
     // Normalize keys and clean up test cases
-    const cleanedCases = parsed.map(tc => {
+    const cleanedCases = parsed.map((tc, index) => {
       // Handle steps whether they come as array or string
       let steps = '';
       if (Array.isArray(tc.steps)) {
@@ -101,10 +114,13 @@ app.post("/generate", async (req, res) => {
         }
       }
 
+      // Generate incremental ID
+      const testCaseId = idCounter++;
+      
       // If it's already in the correct format, return as is
       if (tc.testCase || tc.description) {
         return {
-          id: tc.id || Date.now().toString(),
+          id: testCaseId.toString(),
           title: tc.testCase || '',
           description: tc.description || '',
           preconditions: tc.preconditions || '',
@@ -116,7 +132,7 @@ app.post("/generate", async (req, res) => {
       
       // Legacy format support
       return {
-        id: tc.id || Date.now().toString(),
+        id: testCaseId.toString(),
         title: tc.title || tc.testCase || '',
         description: tc.description || '',
         preconditions: tc.preconditions || tc.Preconditions || '',
