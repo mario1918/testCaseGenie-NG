@@ -79,6 +79,19 @@ Create ${is_additional_generation ? 'new, different test cases' : 'test cases'} 
       throw new Error('Invalid response from AI model');
     }
     
+    // Log token consumption information
+    if (result.response.usageMetadata) {
+      const usage = result.response.usageMetadata;
+      console.log('🔢 TOKEN CONSUMPTION DETAILS:');
+      console.log('='.repeat(50));
+      console.log(`📥 Input Tokens: ${usage.promptTokenCount || 'N/A'}`);
+      console.log(`📤 Output Tokens: ${usage.candidatesTokenCount || 'N/A'}`);
+      console.log(`📊 Total Tokens: ${usage.totalTokenCount || 'N/A'}`);
+      console.log('='.repeat(50));
+    } else {
+      console.log('⚠️  Token usage information not available in API response');
+    }
+    
     const text = result.response.text();
     console.log('Raw response from Gemini:', text);
     
@@ -93,7 +106,12 @@ Create ${is_additional_generation ? 'new, different test cases' : 'test cases'} 
       // Try to parse the JSON to validate it
       const parsed = JSON.parse(jsonMatch[0]);
       console.log('Successfully parsed test cases:', parsed);
-      return jsonMatch[0];
+      
+      // Return both the JSON string and usage metadata
+      return {
+        testCases: jsonMatch[0],
+        tokenUsage: result.response.usageMetadata || null
+      };
     } catch (parseError) {
       console.error('Error parsing JSON response:', parseError);
       console.error('Problematic JSON:', jsonMatch[0]);

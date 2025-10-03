@@ -25,7 +25,7 @@ app.post("/generate", async (req, res) => {
       enhancedPrompt = `${prompt}\n\nAdditional Instructions:\n${special_comments}`;
     }
     
-    const output = await generateTestCases({
+    const result = await generateTestCases({
       prompt: enhancedPrompt,
       existing_test_cases,
       is_additional_generation,
@@ -33,6 +33,16 @@ app.post("/generate", async (req, res) => {
       issue_key,
       conversation_history
     });
+
+    // Handle both old string format and new object format
+    let output, tokenUsage;
+    if (typeof result === 'string') {
+      output = result;
+      tokenUsage = null;
+    } else {
+      output = result.testCases;
+      tokenUsage = result.tokenUsage;
+    }
 
     let parsed;
     try {
@@ -161,6 +171,29 @@ app.post("/generate", async (req, res) => {
     }
     console.log('='.repeat(80));
     
+    // Log comprehensive generation summary including token usage
+    console.log('📊 TEST CASE GENERATION SUMMARY:');
+    console.log('='.repeat(60));
+    console.log(`✅ Generated Test Cases: ${cleanedCases.length}`);
+    console.log(`🔄 Additional Generation: ${is_additional_generation ? 'Yes' : 'No'}`);
+    console.log(`📋 Existing Test Cases: ${existing_test_cases.length}`);
+    
+    if (tokenUsage) {
+      console.log('💰 TOKEN USAGE SUMMARY:');
+      console.log(`   📥 Input Tokens: ${tokenUsage.promptTokenCount || 'N/A'}`);
+      console.log(`   📤 Output Tokens: ${tokenUsage.candidatesTokenCount || 'N/A'}`);
+      console.log(`   📊 Total Tokens: ${tokenUsage.totalTokenCount || 'N/A'}`);
+      
+      // Calculate approximate cost (Gemini pricing as of 2024)
+      if (tokenUsage.totalTokenCount) {
+        const estimatedCost = (tokenUsage.totalTokenCount / 1000) * 0.00025; // Approximate cost per 1K tokens
+        console.log(`   💵 Estimated Cost: $${estimatedCost.toFixed(6)}`);
+      }
+    } else {
+      console.log('⚠️  Token usage data not available');
+    }
+    console.log('='.repeat(60));
+    
     // Log steps transformation for debugging
     cleanedCases.forEach((tc, index) => {
       if (tc.steps && tc.steps.includes('\n')) {
@@ -176,4 +209,8 @@ app.post("/generate", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log('🔢 Token consumption logging enabled');
+  console.log('📊 Detailed generation summaries enabled');
+});
